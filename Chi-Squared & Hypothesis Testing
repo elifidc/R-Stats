@@ -1,0 +1,148 @@
+### 1 
+
+
+
+```{r}
+my.chisq.test <- function(table) {
+  row_sum <- rowSums(table)
+  column_sum <- colSums(table)
+  total_sum <- sum(table)
+  expected_value <- outer(row_sum, column_sum) / total_sum
+  chi_sq <- sum((table - expected_value)^2 / expected_value)
+  df <- (nrow(table) - 1) * (ncol(table) - 1)
+  p_value <- 1 - pchisq(chi_sq, df)
+  return(list(chi_sq_stat = chi_sq, p_value = p_value))
+}
+
+```
+
+
+
+
+### 2
+
+a) The variables we are interested in are "Room Type" and "Borough".
+b) Null Hypothesis: The room type offered is independent of the borough the listing is offered in.
+Alternate Hypothesis: The room type offered is dependent on the borough the listing is offered in.
+c)
+
+```{r}
+listings <- read.csv("/Users/elifyildirim/Desktop/Statistics II/listings.csv")
+
+#colnames(listings)
+#listings$neighbourhood
+#listings$neighbourhood_group
+
+airbnb <- table(listings$neighbourhood_group, listings$room_type)
+airbnb
+
+
+airbnb_row <- rowSums(airbnb)
+airbnb_cols <- colSums(airbnb)
+airbnb_total <- sum(airbnb)
+
+#Manual expected values
+
+#Shared rooms in Queens
+EV_1 <- (airbnb_row["Queens"] * airbnb_cols["Shared room"]) / airbnb_total
+
+#Entire home/apt in Manhattan
+EV_2 <-  (airbnb_row["Manhattan"] * airbnb_cols["Entire home/apt"]) / airbnb_total
+
+
+```
+
+
+```{r}
+#d) Using my function
+
+airbnb_2 <- my.chisq.test(airbnb)
+print(airbnb_2)
+```
+```{r}
+#d) Using R's prebuilt function
+chisq.test(airbnb)
+```
+Using my function for chi-squared, along with R's prebuilt function, I obtained a chi-squared statistic of 1609.4. This is a huge number, which means there is a large significant difference between the expected values of the cells and the actual values in the cells. Additionally, we obtained an extremely small p-value which is basically zero. This means that the odds of differences this dramatic occuring simply by chance is virtually none. The large chi-squared, paired with a p-value of virtually zero, are both strong evidence to reject the null hypothesis.
+
+
+
+## Book Problems
+
+
+### 11.84
+
+```{r}
+library(knitr)
+
+knitr::include_graphics("/Users/elifyildirim/Desktop/Statistics II/hw2.SS.png")
+
+```
+
+### 11.9
+a)
+Null hypothesis: Happiness is independent of gender
+Alternate hypothesis: Happiness is dependent on gender
+
+b)
+A small chi-squared value like 1.04 means that there is a small difference between the expected cell counts and the observed cell counts. A larger chi-squared value would imply that there is infact a relationship between happiness and gender. A p-value of 0.59 is greater than 0.05, meaning we fail to reject the null hypothesis. Both of these suggest that there is no observanle relationship between happiness and gender.
+
+
+c) Calculating expected cell counts for practice
+
+```{r}
+library(knitr)
+
+knitr::include_graphics("~/Desktop/Statistics II/hw2.SS2.png")
+```
+
+
+
+
+##11.16
+
+```{r}
+#a)
+hancock_fish <- 30/55
+hancock_inv <- 4/55
+hancock_birds_reptiles <- 8/55
+hancock_others <- 13/55
+
+trafford_fish <- 13/53
+trafford_inv <- 18/53
+trafford_birds_reptiles <- 12/53
+trafford_others <- 10/53
+
+print(hancock_fish)
+print(hancock_inv)
+print(hancock_birds_reptiles)
+print(hancock_others)
+
+
+print(trafford_fish)
+print(trafford_inv)
+print(trafford_birds_reptiles)
+print(trafford_others)
+```
+
+b)
+Null hypothesis: Primary food choice is independent of which lake the alligators are in
+Alternative hypothesis: Primary food choice is dependent on which lake the alligators are in
+
+
+c)
+df = (2−1)×(4−1) = 3
+```{r}
+qchisq(0.95, df = 3)
+qchisq(0.99, df = 3)
+```
+At both a 95% and 99% significance level, a chi squared statistic of 16.79 is a good amount over the corresponding critical values. For a 95% significance level, we expected ~7.81, and for a 99% significance level, we expected ~11.34. Our value of 16.79 is above these thresholds, meaning that the differences in food source are statistically significant.
+
+d) A p-value of < 0.001 indicates that there is strong evidence to reject the null hypothesis. In context, this means that there is a less than 0.1% chance that the observed differences in the different primary food choices across the two lakes was due to chance.
+
+
+
+
+
+
+

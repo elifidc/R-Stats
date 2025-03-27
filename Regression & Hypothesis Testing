@@ -1,0 +1,141 @@
+```{r}
+set.seed(1515)
+n <- 5
+beta0 <- 2
+beta1 <- 3
+std_error <- 100
+trials <- 1000
+
+regression_simulation <- function(){
+  X <- runif(n, -50,50)
+  eps <- rnorm(n,0,std_error)
+  Y <- beta0 + beta1 * X +eps
+  model <- lm(Y~X)
+  beta1_hat <- coef(model)[2]
+  std_err_beta1 <- summary(model)$coefficients[2,2]
+  Test_Stat <- (beta1_hat - beta1) / std_error
+  return(Test_Stat)
+  
+}
+test_stat_sims <- replicate(trials, regression_simulation())
+mean(test_stat_sims)
+
+hist(test_stat_sims, probability = TRUE, col = "lightblue", main = "Distribution of Test Stats")
+
+
+curve(dt(x, df = n - 2), add = TRUE, col = "red", lwd = 2) 
+
+#curve(dt(x, df = n - 2), from = min(test_stat_sims), to = max(test_stat_sims), col = "red", lwd = 2)
+
+#Not sure why I cannot get my plots to overlay, tried debugging w/ GPT.
+
+```
+
+# PROBLEM 2
+
+```{r}
+n <- 200
+X <- runif(n, -50,50)
+n.rep <- 1000
+
+conf_int_b0 <- matrix(0, nrow=n.rep, ncol=2)
+conf_int_b1 <- matrix(0, nrow=n.rep, ncol=2)
+
+for (r in 1:n.rep){
+  eps <- rnorm(n,0,10)
+  Y <- 2 + 3*X + eps
+  model <- lm(Y~X)
+  ci_b0 <- confint(model)[1,]
+  ci_b1 <- confint(model)[2,]
+  
+  conf_int_b0[r,] <- ci_b0
+  conf_int_b1[r,] <- ci_b1
+}
+
+b0_percent <- mean(conf_int_b0[, 1] < 2 & 2 < conf_int_b0[, 2])  
+b1_percent <- mean(conf_int_b1[, 1] < 3 & 3 < conf_int_b1[, 2])
+
+print(b0_percent*100)
+print(b1_percent*100)
+
+```
+
+
+When we generate 200 response values from the equation Y=2+3X, calculate confidence intervals for B0hat and B1hat, and keep track of the proportion of those that generate the true "known" population values, we get 94.8 and 95.7. This is almost exactly in line with what we expect, given the practical interpretation of a confidence interval. We conducted 95% confidence intervals, determined by our alpha value. We choose this value hoping that if we repeat the sampling process many, many times, and record the sample statistics, then 95% of the time, our intervals should contain the true population value. 
+
+# PROBLEM THREE
+
+Null Hypothesis: There is no statistically significant relationship between radio ads and sales.
+B1 = 0
+
+Alternate Hypothesis: There is a statistically significant relationship between radio ads and sales
+B1 
+
+
+
+```{r}
+adv <- read.csv("~/Desktop/Statistics II/Advertising.csv")
+
+adv_model <- lm(sales ~ radio, data = adv)
+summary(adv_model)
+
+
+
+```
+Intercept:
+When looking at our model summary, we get a Beta 0 hat coefficient of 9.31, a t-value of 16.5, and a p value of 2e-16.
+The large t-value suggests that the observed intercept is significantly differnet than the expected intercept under the null hypothesis. The very small p-value goes hand in hand with this. In plain terms, the intercept of 9.31 means that if a market spent 0 dollars on radio ads, the expected sales are 9310 items.
+
+
+Coefficient:
+For B1 hat, we get a coefficient of 0.202, a t-value of 9.9, and a pvalue of 2e-16. Both of these are strong evidence toward a linear relationship between radio ads and sales. A coefficient of 0.202 means that for every additional unit ($1000), we expect an additional 202 items in sales, on average. There is enough evidence to reject the null hypothesis.
+
+
+
+## Confidence Intervals for the Intercept and Slope
+
+```{r}
+confint(adv_model)
+
+```
+
+Intercept 95% confidence interval: (8.201,10.421)
+We are 95% sure that the true sales, or population intercept, when $0 is spent on radio advertisement is between 8200 and 10420 items sold.
+
+Slope 95% confidence interval: (0.162, 0.242)
+We are 95% sure that the per one unit increase in radio ads, we expect sales to increase by between 162.2-242.7 items sold, on average. 
+
+
+## Prediction for $20,000 investment
+
+```{r}
+prediction_20k <- data.frame(radio = 20) #20 because data is in thousands of dollars
+
+yhat_20k <- predict(adv_model, prediction_20k)
+print(yhat_20k)
+```
+
+If a market invests $20,000 dollars in radio advertisements, we expect sales to be ~13,261 dollars, on average.
+
+
+```{r}
+conf_band_20k <- predict(adv_model, prediction_20k, interval = "confidence")  
+pred_band_20k <- predict(adv_model, prediction_20k, interval = "prediction") 
+
+print(conf_band_20k)
+
+```
+We are 95% confident that the average sales of markets that spend $20,000 on radio advertisements will fall between 12750 and 13972 items sold. This aims to predict the true market mean for this X value.
+
+
+
+
+```{r}
+print(pred_band_20k)
+```
+We are 95% confident that the sales for a single market that spends $20,000 on radio advertisements will fall between 4,910 and 21,810 items sold.
+
+
+
+## Wider Bands?
+For markets with a $20,000 investment in radio advertisements, the prediction bands are much wider than the confidence bands. This is because confidence bands try to estimate a single value that represents the average of all the markets. In reality, there is much more variability market to market. The prediction bands represent this uncertainty and variability, so it gives a wider range of predictions.

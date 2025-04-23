@@ -1,0 +1,223 @@
+---
+title: "Stats2-HW8-Elif-Yildirim"
+output:
+  pdf_document:
+    latex_engine: xelatex
+date: "2025-04-15"
+---
+#Problem #1 (2.5pts)
+##For Auto data set from ISLR library. Proceed to conduct variable selection via backward AIC approach:
+```{r}
+library(ISLR)
+data(Auto)
+head(Auto)
+Auto <- na.omit(Auto)
+full_model <- lm(mpg ~ . - name, data = Auto)
+
+backwards_model <- step(full_model, direction = "backward")
+```
+```{r}
+#IGNORE THIS
+
+
+
+)
+server <- function(session, input, output) {
+  output$hist <- renderPlotly({
+    df <- data.frame(x = rnorm(input$n))
+    plot_ly(
+      data = df,
+      x = ~x,
+      type = "histogram"
+    )
+  })
+  output$box <- renderPlotly({
+    df <- data.frame(x = rnorm(input$n))
+    plot_ly(
+      data = df,
+      x = ~x,
+      type = "box"
+    )
+  })
+  output$sumstat <- renderTable({
+    x <- rnorm(input$n)
+    stats <- c(mean(x), sd(x), summary(x)[-4])
+    df <- data.frame(Size=length(x), Mean=stats[1], SD=stats[2], Min=stats[3], Q1=stats[4],
+                     Median=stats[5], Q3=stats[6], Max=stats[7])
+  })
+}
+shinyApp(ui = ui, server = server)
+```
+
+##1. Which R function allows us to do that? Which variable(s) ended up being dropped from the model?
+By using the step() function in R and manually setting the direction to "backward", we can perform variable selection via backwards AIC approach. In this case, the variable dropped from the model was acceleration. Dropping acceleration increases the residual sum of squares by 7.36 units, and the algorithm stopped after dropping that variable.
+
+
+##2. Explain what is meant by “Df”, “Sum of Sq”, “RSS” and “AIC” in the tables outputted by step()
+##function.
+DF -> This number represents how many variables are being removed. By removing the one variable of acceleration, we lose one degree of freedom. Changing the degrees of freedom affects the model's complexity, as every additional parameter makes it more complex.
+Sum of Sq --> This output represents the increase/decrease in the sum of squares if you were to remove the corresponding variable. We want to remove predictors with small values in this column, trading off a slight increase in error (sum of squares), in exchange for a much simpler model. A small value here means the variable will not hurt the model's performance much.
+RSS --> The RSS is the residual sum of squares. This quantifies the total error in the model.This is the sum of how far off predictions were from actual observed values.
+AIC --> The AIC is the Akaike Information Criterion. This value can be represented by the following equation: AIC=n⋅log(RSS/n)+2p, where p is the number of parameters in the model. With RSS, it will always increase when you add more parameters. This is bad because the RSS will show improvement, even if the predictors are not useful. AIC is an alternative metric that balances the RSS with model complexity, punishing models with a high number of parameters.
+
+
+##3. Explain why the algorithm stopped (!) on that particular subset of variables. Hint: What does “<none>” represent? Why is it of interest?)
+
+The way the AIC algorithm works is by removing variables and then measuring the change in the AIC removing the variable causes. In this case, removing acceleration lowered our AIC from 950.5 to 949.18. A lower AIC means the tradeoff between accuracy and complexity was worth it. However, when the model repeated the process and tried to remove more variables, the AIC increased, meaning the tradeoff was not worth it. This is where the <none> variable comes in, showing that the AIC cannot decrease any further.
+
+
+
+# Problem Two
+##For the W age data set from ISLR package, let’s work on several models:
+
+##1. Explaining wage (in 1, 000$s) as a function of age and job class.
+
+###a. Proceed to write down the full modeling equation for wage ∼ age + jobclass regression, properly explaining the dummy variables.
+wage_i = B0 + B1* Age_i + B2*D_i+ error_i
+Where D_i is our dummy variable. 
+D_i = 1 if Job class = "Information"
+D_i = 0 if Job class = "Industrial"
+Therefore, B0 represents the baseline as "Industrial"
+
+###b. Fit the model from (a), and write down the fitted equation
+
+
+
+```{r}
+data(Wage)
+#head(Wage)
+#Wage$jobclass
+wage_model <- lm(wage ~ age + jobclass, data = Wage)
+summary(wage_model)
+```
+Fitted Equation:
+wage_hat = 76.63 + 0.648*age + 15.92(D), where D_i = 1 if Job class = "Information", 
+D_i = 0 if Job class = "Industrial"
+
+###Is job class a statistically significant variable? Why? If yes - proceed to interpret its effect on wage
+Yes, looking at the p-value for jobclass, we see that it is a statistically significant variable. The p-value is less than 0.05. This means that we can reject the null hypothesis. Holding age constant, workers in Information jobs earn, on average, 15.921 units of wage more than workers in Industrial jobs.
+
+
+
+
+#Problem Three
+#Explaining wage (in 1, 000$s) as a function of age and marital status.
+##a. Proceed to write down the full modeling equation for wage ∼ age + maritl regression, properly explaining the dummy variables.
+
+wage_i = B0 + B1* age + B2 * D_Married + B3 * D_Separated + B4 * D_Divorced + B5 * D_Widowed + error_i
+
+
+Where B0 represents baseline as Never Married and where:
+D_Married = 1 if the person is married, 0 otherwise
+D_Widowed = 1 if the person is widowed, 0 otherwise
+D_Divorced = 1 if the person is divorced, 0 otherwise
+D_Separated = 1 if the person is separated, 0 otherwise
+
+##b. Fit the model from (a), and write down the fitted equation.
+
+wage_hat = 78.65+0.432 * age +20.82 * D_married -1.06 * D_widowed + 3.93* D_divorced + 3.62 * D_separated
+
+```{r}
+wage_model2 <- lm(wage ~ age + maritl, data = Wage)
+summary(wage_model2)
+
+```
+
+
+
+
+##c. Comment on the statistical significance of each dummy variable.
+
+Married --> This dummy variable is statistically significant, with a p-value significantly less than 0.05.This means that for those with marital status married, there is significant evidence that their wage is affected by martial status compared to the baseline, never married.
+Widowed --> The p-value for this value is high, indicating there is no statistical evidence against the claim that widowed individuals have the same wage as never married.
+Divorced --> The p-value for divorce is lower than widowed, but still way greater than 0.05. The differences observed are likely due to chance. There is not enough evidence to reject the null hypothesis.
+Separated --> A p-value of 0.523 indicates there is not enough evidence to reject the null hypothesis. There is no strong evidence of a difference in wage between separated and baseline, never married.
+
+
+##d. Interpret the most statistically significant dummy variable (NOT the “per 1-unit” version though, the group comparison version).
+
+Most statistically significant dummy variable --> D_Married
+
+Individuals who are married earn ~20.82 units of wage higher (dollars/hr?) than individuals who are "never married", on average, holding age constant.
+
+
+###e. Conduct the test for significance of the entire maritl variable when predicting person’s wage. In particular, make sure to 1) formulate the H0, Ha hypotheses; 
+
+Null Hypothesis: B1 =B2 = B3 = B4 = B5 = 0, or
+All dummy variable beta coefficients are 0
+
+Alternate Hypothesis: At least one dummy variable beta coefficient != 0
+
+
+
+###2) write down the modeling equation of the “null” model;
+
+wage_hat = beta0 +beta1 * age
+
+
+###3) write the formula for test statistic; 
+
+F-test formula = ((RSS_Null-RSS_Full)/(df_Null-df_Full)) / (RSS_Full/df_Full)
+
+
+
+
+###4) use R’s anova() to carry out the test, and match the output to the terms in the test statistic formula;
+
+```{r}
+
+wage_model_null <- lm(wage ~ age, data = Wage)
+wage_model3 <- lm(wage ~ age + maritl, data = Wage)
+anova(wage_model_null, wage_model3)
+```
+
+RSS null --> 502216
+RSS full --> 4799644
+df null --> 2998
+df full --> 2994
+F-statistic --> 34.61
+P-value of given F-statistic --> 2.2e-16
+
+
+###5) provide the conclusion of the test
+Looking at the p-value of our F-test, we can reject the null hypothesis and conclude that marital status contains a significant predictor of wage, even when holding age constant. Based on the ANOVA output, at least one of our dummy variables has a significant impact on predicting wage.
+
+
+#Problem Four
+When dealing with a categorical predictor X containing > 2 categories (say, 3), why do we have
+to use dummy variables approach? Why not just model it as....
+
+
+If we were to model the categorical predictors as shown in the homework PDF, we would be implying a numerical order of these categories, as well as an implicit weight or distance factor. If we make x = 2 a category A, and x = 1 another category B, then we are implying that category A is "twice as much" or "twice as far" as category B. By doing this, we are assigning a meaning to the orders created. However, if we were to model using a binary 0 = no and 1 = yes, then each variable just represents the "presence of" or "lack of" a variable.
+
+
+
+# Summary
+
+In this homework, we got to dive into categorical variables in regression. We learned about dummy variables in class as a numerical representation of a category.In class, we created a dummy variable for the "ShelveLoc" variable, with the baseline/intercept being the "Bad" category. Up until now, the hypothesis testing aspects of the lessons were basically the same across scenarios. For categorical variables, the structure of the null/alternate hypotheses are the same, but the interpretation varries. One important thing to remember in this lesson is that when interpreting the coefficients of the model, they represent the change from the baseline, not from the category directly "above/below" it. AKA, the coefficient for widowed represents the change from never married, not married. Lastly, in class we did a step-by-step for an example illustrating how the AIC works. We watched the tradeoff eventually become not worth it, and we saw that same concept demonstrated in question 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

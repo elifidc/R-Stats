@@ -1,0 +1,139 @@
+---
+title: "STATS2-HW6-Elif-Yildirim"
+output: pdf_document
+date: "2025-03-31"
+---
+
+
+# ONE 
+```{r}
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+library(tidyverse)
+install.packages("scatterplot3d")
+library(scatterplot3d)
+
+crime <- read_csv("~/Desktop/Statistics II/fl_crime.csv")
+head(crime)
+
+#Renaming column names because original ones had special characters etc, which I didn't want to worry about
+names(crime)[names(crime) == "crime rate (per 1000)"] <- "crime"
+names(crime)[names(crime) == "education (%)"] <- "education"
+names(crime)[names(crime) == "urbanization (%)"] <- "urbanization"
+names(crime)[names(crime) == "income (median, in 1000)"] <- "income"
+
+head(crime)
+```
+
+a. Write down the full modeling equation, with all error assumptions.
+
+Crime_i = beta0 + beta1*education_i+error_i, where error_i is ~ N,independent(0,sigma^2).
+
+Error term assumptions: Linearity, normality,homoscedasticity, and independence.
+
+b. Fit the model, provide the fitted equation. Provide a plot of the fitted line.
+
+```{r}
+lm.obj <- lm(crime ~ education, data = crime)
+
+print(summary(lm.obj))
+
+
+plot(crime$education, crime$crime,
+     main = "Crime vs Education",
+     xlab = "Education", ylab = "Crime Rate")
+abline(lm.obj, col = "blue", lwd = 2)
+
+
+```
+
+crimehat_i = -50.857 + 1.486*education
+
+
+c. Is there a statistically significant relationship? If yes, interpret the effect of education on crime.
+There appears to be a statistically significant relationship between crime and education. The p-value is near 0, less than 0.05, so we reject the null hypothesis that b1=0. Education appears to be a statistically significant predictor of crime.
+For each 1 percentage point increase in education, the crime rate increases by 1.486 units (per 1,000 people), on average.
+
+# TWO
+Full Modeling
+
+Crime_i = beta0 + beta1 * education_i + beta2 * urbanization_i +error_i, where error_i is ~ N,independent(0,sigma^2).
+Error term assumptions: Linearity, normality,homoscedasticity, and independence.
+
+
+```{r}
+lm.obj2 <- lm(crime ~ education + urbanization, data = crime)
+summary(lm.obj2)
+```
+Fitted Equation:
+
+crimehat_i = -50.857 - 0.583 * education + 0.682 * urbanization
+
+
+
+```{r}
+
+lm2.plot <- scatterplot3d(crime$education, crime$urbanization, crime$crime,
+                     xlab = "Education",
+                     ylab = "Urbanization",
+                     zlab = "Crime Rate",
+                     main = "Crime ~ Education + Urbanization")
+
+lm2.plot$plane3d(lm.obj2)
+
+```
+
+c. Provide interpretation of education effect on crime. Did it change compared to part 1? Why?
+
+For each 1-unit increase in education (percentage point?), holding urbanization constant, we expect crime to decrease by 0.583 units, on average. This is a significant change from part 1. Before, there appeared to be a statistically significant, positive relationship. Now, education is NOT a significant predictor of crime, according to the p-value, and a negative relationship appears.
+
+
+
+d. Provide interpretation of the intercept. By the sound of it, does it make sense to interpret it here?
+The intercept tells us the expected value of the response when the predictors are equal to zero. In this case, the interpretation is not the most useful because it gives us a baseline for a community with 0 education and 0 urbanization, which is unlikely and not logical. In this case, it means the expected crime rate when theres 0% education and 0 units of urbanization is 59.12 units (crimes per 10,000 I think? Not sure.)
+
+
+#THREE
+a.Full modeling equation, with all error assumptions.
+
+Crime_i = beta0 + (beta1* education_i ) + (beta2 * urbanization) + (beta3 * income) + error_i, where error_i is ~ N,independent(0,sigma^2).
+Error term assumptions: Linearity, normality,homoscedasticity, and independence.
+
+
+b. Fitted equation.
+
+crime_i = 59.71 - (0.467 * education_i) + (0.697 * urbanization_i) - (0.383 * income_i)
+
+```{r}
+
+lm.obj3 <- lm(crime ~ education + urbanization + income, data = crime)
+summary(lm.obj3)
+
+
+
+```
+
+
+c. Write down the hypotheses (in terms of parameters of the model in part 3(a)) and make conclusions
+for t-tests on significance of each individual predictor.
+
+Null Hypothesis: 
+
+Education = beta1 = 0
+Urbanization = beta2 = 0
+Income = beta3 = 0
+
+
+Alternate Hypothesis: 
+
+Education = beta1 != 0
+Urbanization = beta2 != 0
+Income = beta3 != 0
+
+When looking at the t-values for the predictors, we see that education and income are pretty close, while urbanization is a few standard errors higher. However, this is not enough to determine significance. When we look at the corresponding p-values, we can confirm that urbanization appears close to 0, allowing us to reject the null hypothesis for beta2. This means urbanization is a statistically significant predictor of crime when holding education and income constant. On the other hand, the p-values for education and income are relatively large, so we fail to reject their null hypotheses. This means education and income are not useful/significant predictors of crime in this third model.
+
+
+
+
+d. Interpret the effect of the only statistically significant predictor from part 3(c)
+
+For every one unit increase in urbanization, holding education and income constant, we expect an increase of ~0.697 units for the crime rate, on average.

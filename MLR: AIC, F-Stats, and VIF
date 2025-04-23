@@ -1,0 +1,258 @@
+---
+title: "Stats 2 HW7"
+author: "Elif Yildirim"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+```{r}
+library(tidyr)
+library(tidyverse)
+```
+
+# Problem One: Continued
+## e
+
+
+Null Hypothesis: beta_education = 0, beta_urbanization = 0, beta_income = 0
+or beta1=beta2=beta3=0
+
+
+Alternate Hypothesis: At least one beta_j does not = 0
+
+Conclusion:
+
+```{r}
+
+crime <- read_csv("~/Desktop/Statistics II/fl_crime.csv")
+names(crime)[names(crime) == "crime rate (per 1000)"] <- "crime"
+names(crime)[names(crime) == "education (%)"] <- "education"
+names(crime)[names(crime) == "urbanization (%)"] <- "urbanization"
+names(crime)[names(crime) == "income (median, in 1000)"] <- "income"
+lm.obj3 <- lm(crime ~ education + urbanization + income, data = crime)
+summary(lm.obj3)
+```
+When looking at our model summary , we get an F-statistic of 18.83 and a corresponding p-value of 7.823e-09, nearly zero. According to this test, we can reject the null hypothesis for overall model significance and say that there is strong evidence that at least one of the predictors in the model is statistically significant/useful. We can also see this reflected in the p-values of the predictors, as urbanization stands out as extremely significant, while the others have relatively large p-values.
+
+
+
+
+# Problem Two: Why need F-statistic?
+
+#1 Generate Data, How would you do that?, How would you demonstrate unrelation?
+
+```{r}
+set.seed(1515)
+
+X <- rnorm(200)
+Y <- rnorm(200)
+
+```
+I generated both X and Y independently from a random distribution. This should ensure that they are unrelated to each other as they are generated from random noise. A basic scatterplot should be able to visualize lack of relationship.
+
+
+```{r}
+plot(Y ~ X)
+```
+When looking at the plot, we can see that there appears to be no linear or non-linear trends, with the dots looking like a swarm of points randomly scattered.
+
+
+#2a Generate response variable vector Y (e.g. of length 200) 
+
+```{r}
+Y <- rnorm(200)
+```
+
+
+
+#2b Generate 50 predictor variable vectors
+```{r}
+
+X.df <- as.data.frame(replicate(50, rnorm(200)))
+
+X.df$Y <- Y
+#head(X.df)
+```
+
+
+#3 Fit a multiple linear regression model, regressing response Y from part 2(a) on all 50 X’s you’ve generated in part 2(b)
+
+```{r}
+model1 <- lm(Y ~ ., data = X.df)
+#summary(model1)
+
+p.values <- summary(model1)$coefficients[-1, 4]
+sum(p.values < 0.05)
+```
+
+
+3a) Report the # of individual t-tests that resulted into a significant p-value, hence rejecting H0 at
+α = 0.05 level. Were those rejections correct decisions or not? Why? (Hint: Remember what’s
+the true relationship between X and Y , given how you generated the data.) If not, what type of
+error do they correspond to? Why?
+
+The model summary shows 50 t-tests, one for each predictor generated. When I sum the p-values with values less than 0.05, I get a result of 2. Even though the predictors and response are completely unrelated and randomly generated, we would incorrectly reject the null hypothesis 2 times. This means by random chance, we "found" statistical significance. This is due to our alpha level, making these 2 p-values examples of a Type I error, aka 2/50 is ~0.05.
+
+
+
+b. Given that the individual significant t-test aren’t necessarily indicative of at least one predictor
+having a true relationship with the response, what would be the appropriate testing procedure to
+address that question? Conduct that test, report its p-value, interpret its result.
+
+The appropriate test to address this question would be the F-test. This would test if overall in the model, if any single variable is useful in the predictor or not.
+As we saw earlier, individual t-tests can output false positive results that don't actually affect the prediction. When we look at the output, we see F-statistic: 0.8002,  p-value: 0.8173. A small F-statistic, with a large p-value tells us that we fail to reject the null hypothesis that there are no significant predictors in the model. This output corresponds with the fact that X and Y were generated from random noise.
+```{r}
+summary(model1)
+```
+
+#Problem Three
+```{r}
+library(ISLR)
+#head(Auto)
+#str(Auto)
+```
+
+```{r}
+model2 <- lm(mpg ~ . - name, data = Auto)
+summary(model2)
+```
+3.1) Formulate the H0 and Ha hypotheses (using parameter notation) for testing whether the overall model
+is significant. Which part of summary() output corresponds to this test? Is the model significant?
+
+Null hypothesis: beta1=beta2=beta3=beta4=beta5=beta6=beta7=0
+Alternate hypothesis: At least one beta does not = 0
+The last line of the summary output corresponds to this test. It shows the F-statistic and it's corresponding p-value. This model is significant because of a very large F-statistic with a near-zero p-value. This means we can reject the null hypothesis and say at least one of these predictors is significant.
+
+3.2) Which predictors appear to have a statistically significant relationship to the response? Just list them
+
+Significant predictors: Displacement, Weight, Year, Origin
+
+3.3) Interpret the effect of car’s weight on its miles per gallon.
+For every 1-unit increase in weight, holding all other variables constant, we expect a 0.0065 unit decrease in MPG, on average.
+
+
+
+
+3.4. For the effect from part 3, proceed to report and interpret the 95% confidence interval.
+
+
+```{r}
+confint(model2, "weight")
+```
+
+We are 95% confident that the true value of the linear relationship of weight on MPG is between -0.00776 and -0.00519. Since zero is not found in this interval, the relationship is still significant.
+
+
+3.5. Report and interpret both quality-of-fit metrics
+
+1. The R-squared for this model is 0.8215, meaning that the model explains roughly 82% of the variation in MPG. 
+2. The RSE for this model is 3.328, meaning that on average, the model predicts MPG inaccurately within 3.33 mpg. This is not a very high error in context, suggest good model fit.
+
+
+# PROBLEM FOUR
+
+```{r}
+library(ISwR)
+data(cystfibr)
+#head(cystfibr)
+#str(cystfibr)
+```
+
+
+
+
+1. Proceed to fit the following multiple linear regression model:
+
+```{r}
+model3 <- lm(pemax ~ ., data = cystfibr)
+summary(model3)
+```
+a. Comment on the 1) overall model significance; 2) significance of any individual predictors. Why
+do you think this is happening (name the main issue)?
+When looking at the p-value of the f-statistic, it is a little bit below 0.05, indicating at least one significant predictor. However looking at the individual p-values of the predictors, none of the predictors appear statistically significan; they all have p-values >0.05. This is likely due to collinearity. If some of these predictors are similar values or highly influenced by another, their affects can become lost.
+
+b. Proceed to address the issue observed in part (a) via studying a correlation matrix of predictors,
+modifying the model accordingly. Fit the modified model, comment on its 1) overall model
+significance; 2) significance of any individual predictors.
+
+```{r}
+predictors <- cystfibr[, names(cystfibr) != "pemax"]
+
+pred.corr <- cor(predictors)
+print(pred.corr)
+```
+
+When we remove the target variable and compute a correlation matrix, we can see evidence of collinearity. Age, height, and weight all appear to be correlated with each other. Additionally, rv and frc appear correlated as well. To proceed to fit a modified model, we will drop columns.
+
+```{r}
+model4 <- lm(pemax ~ sex + weight + bmp + fev1 + rv + tlc, data = cystfibr)
+summary(model4)
+```
+Now, when looking at the summary of the modified model, our p-value not only got smaller, but we can see some significant predictors as well. The p-values for weight, bmp, and fev1 are all below 0.05.
+
+
+
+c. Proceed to address the issue observed in part (a) via using VIF criteria method. Fit the modified
+model, comment on its 1) overall model significance; 2) significance of any individual predictors.
+
+
+```{r}
+library(car)
+
+
+#summary(model3)
+vif(model3)
+```
+
+Removing weight
+```{r}
+
+model_a<- lm(pemax ~ . - height, data = cystfibr)
+vif(model_a)
+
+```
+
+```{r}
+model_b <- lm(pemax ~ . - height  - age, data = cystfibr)
+vif(model_b)
+
+```
+After removing age and height, the VIF output looks better. However, rv and frc still appear colinear.
+```{r}
+model_c <- lm(pemax ~ . - height  - age - frc, data = cystfibr)
+vif(model_c)
+```
+After removing the variables age, height, and frc, all the VIF values of the predictors are in the 1.5-2.5 range, which although not perfect, is a huge improvement. 
+Removing some of these variables helped isolate the effects of the remaining variables. Rather than trying to estimate the Y based on weight while holding age constant, we are just looking at weight. In some ways, you can image that weight becomes a representative of age, and absorbs the effect of age (not mathematically literally), even though age is not factored into the model. Age, weight, and height are all a form of measure for total body size/metric. They don't always change independently of each other. In some cases, trying to predict that may be difficult due to lack of instances where weight changes and height does not, or when age changes but weight does not. Some of this just is not practical due to the context. These variables often work together, and this especially applies for these variables in question. If there is not enough data for these cases, the model can have a hard time estimating the actual significance of each predictor.
+
+d. In you own words, why does collinearity prevent us from accurately estimating effects of collinear
+predictors on the response variable?
+
+I accidentally started answering this in the previous question so I continued above.
+
+
+2.2
+
+```{r}
+full <- lm(pemax ~ sex + weight + height + rv + frc, data = cystfibr)
+summary(full)
+```
+```{r}
+reduced <- lm(pemax ~ sex + height + rv, data = cystfibr)
+summary(reduced)
+```
+When we look at the summary, specifcally the standard errors for beta height and beta rv of the full and reduced models, we see that they both go down. This is because the full model still has variables that height and rv are collinear with. If they are correlated, then they move with each other, so it is hard to find instances where one changes and the other does not (aka per one unit change...holding xyz constant). This is what drives the increase in the standard error for the full model. This is why removing these variables resulted in a lower standard error.
+
+
+```{r}
+vif(full)
+```
+In the full model, the height has the highest VIF, which is why it is dropped first. This differs from what I did above, I believe in class we left weight. Second, we would drop FRC because it would have the next highest VIF.
+
+
+# Summary
+In this homework/lecture series we continued multiple linear regression and also covered the F-statistic. In class we learned that the F-statistic is an overall measure of whether or not the model contains a single significant predictor. We talked about how this works through measuring the VIF. One sign of collinearity is the standard error of predictors blowing up. We demonstrated this in class with a synthetic example in the radio/tv/news ads data. By creating a composite variable "total" (tv+news or something). We saw that the model automatically removed these variables with perfect correlation. When prof. skripnikov added enough jitter to the synthetic variable to avoid that, the model could not recognize the significance of the previously significant variables. Here we demonstrated something similar. By removing highly correlated variables, we watched the VIF of each model go down. We also saw multiple instances of the F-statistic indicating significance despite the large p-values.Another thing that we've covered this semester and last semester that is being demonstrated is the type I error in action. Despite simulating random predictors and random predictions, our models still determined a small proportion of predictors significant based on the alpha level.
+
+
+
+
